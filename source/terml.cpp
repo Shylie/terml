@@ -13,6 +13,7 @@ terml::terml() :
 	main(nullptr),
 	quit(nullptr),
 	key(nullptr),
+	resize(nullptr),
 	buffer(nullptr),
 	width(0),
 	height(0)
@@ -136,7 +137,12 @@ void terml::set_key_callback(terml_key_callback callback)
 	key = callback;
 }
 
-void terml::key_event(char code)
+void terml::set_resize_callback(terml_resize_callback callback)
+{
+	resize = callback;
+}
+
+void terml::key_event(char code) const
 {
 	if (key)
 	{
@@ -158,7 +164,10 @@ void terml::mainloop()
 
 		while (current_time >= last_time + wait_time)
 		{
-			main();
+			if (main)
+			{
+				main();
+			}
 
 			process_events();
 
@@ -215,6 +224,9 @@ void terml::setup_buffer()
 
 	if (width != new_width || height != new_height)
 	{
+		const unsigned int old_width = width;
+		const unsigned int old_height = height;
+
 		width = new_width;
 		height = new_height;
 
@@ -229,6 +241,11 @@ void terml::setup_buffer()
 		}
 
 		buffer[CELL_SIZE * width * height] = '\0';
+
+		if (resize)
+		{
+			resize(old_width, old_height, new_width, new_height);
+		}
 	}
 }
 
@@ -319,6 +336,11 @@ extern "C"
 	void terml_set_key_callback(terml_key_callback callback)
 	{
 		TERML_G->set_key_callback(callback);
+	}
+
+	void terml_set_resize_callback(terml_resize_callback callback)
+	{
+		TERML_G->set_resize_callback(callback);
 	}
 
 	void terml_start()

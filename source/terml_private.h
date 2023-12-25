@@ -44,6 +44,7 @@ public:
 	void set_main_callback(terml_main_callback);
 	void set_quit_callback(terml_quit_callback);
 	void set_key_callback(terml_key_callback);
+	void set_resize_callback(terml_resize_callback);
 
 	void mainloop();
 	void stop();
@@ -62,7 +63,7 @@ protected:
 	virtual unsigned long long timer_frequency() = 0;
 	virtual void process_events() = 0;
 
-	void key_event(char code);
+	void key_event(char code) const;
 
 private:
 	char* buffer;
@@ -71,6 +72,7 @@ private:
 	terml_main_callback main;
 	terml_quit_callback quit;
 	terml_key_callback key;
+	terml_resize_callback resize;
 	bool should_quit;
 	bool really_should_quit;
 
