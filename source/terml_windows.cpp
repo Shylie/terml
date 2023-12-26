@@ -93,6 +93,10 @@ void terml_windows::process_events()
 			}
 		}
 
+		if (num_events_read >= num_events_available)
+		{
+			return;
+		}
 		num_events_available -= num_events_read;
 	}
 }
