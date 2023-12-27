@@ -81,7 +81,10 @@ void terml_windows::process_events()
 				{
 					for (int repeat = 0; repeat < record->wRepeatCount; repeat++)
 					{
-						key_event(record->uChar.AsciiChar);
+						if (record->uChar.AsciiChar)
+						{
+							key_event(record->uChar.AsciiChar);
+						}
 					}
 				}
 				break;
