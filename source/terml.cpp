@@ -171,7 +171,7 @@ void terml::mainloop()
 
 			process_events();
 
-			last_time += wait_time;
+			last_time = current_time;
 		}
 
 		if (should_quit)
