@@ -57,19 +57,19 @@ char terml::get(unsigned int x, unsigned int y, int* fg, int* bg) const
 	if (bg)
 	{
 		const unsigned char r =
-			(buffer[offset * CELL_SIZE + 26] - '0') +
+			(buffer[offset * CELL_SIZE + 28] - '0') +
 			(buffer[offset * CELL_SIZE + 27] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 28] - '0') * 100;
+			(buffer[offset * CELL_SIZE + 26] - '0') * 100;
 
 		const unsigned char g =
-			(buffer[offset * CELL_SIZE + 30] - '0') +
+			(buffer[offset * CELL_SIZE + 32] - '0') +
 			(buffer[offset * CELL_SIZE + 31] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 32] - '0') * 100;
+			(buffer[offset * CELL_SIZE + 30] - '0') * 100;
 
 		const unsigned char b =
-			(buffer[offset * CELL_SIZE + 34] - '0') +
+			(buffer[offset * CELL_SIZE + 36] - '0') +
 			(buffer[offset * CELL_SIZE + 35] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 36] - '0') * 100;
+			(buffer[offset * CELL_SIZE + 34] - '0') * 100;
 
 		*bg = (r << 16) | (g << 8) | b;
 	}
