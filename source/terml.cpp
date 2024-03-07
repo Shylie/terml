@@ -214,8 +214,8 @@ void terml::setup_buffer()
 
 	stdin_buffer[STDIN_BUFFER_SIZE] = '\0';
 
-	unsigned int new_width = width;
-	unsigned int new_height = height;
+	const unsigned int new_width = width;
+	const unsigned int new_height = height;
 	const int scanned = sscanf(stdin_buffer, CURSOR_POSITION_FORMAT(), &new_height, &new_width);
 	if (scanned != 2)
 	{
@@ -244,7 +244,7 @@ void terml::setup_buffer()
 
 		if (resize)
 		{
-			resize(old_width, old_height, new_width, new_height);
+			resize(old_width, old_height);
 		}
 	}
 }

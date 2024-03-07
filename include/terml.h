@@ -11,9 +11,7 @@ typedef int  (*terml_quit_callback)  ();
 typedef void (*terml_key_callback)   (char code);
 typedef void (*terml_resize_callback)(
 	unsigned int previous_width,
-	unsigned int previous_height,
-	unsigned int new_width,
-	unsigned int new_height
+	unsigned int previous_height
 );
 
 int terml_init();
