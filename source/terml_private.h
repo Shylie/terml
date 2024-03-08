@@ -25,6 +25,9 @@
 #define FG(r, g, b) CSI "38;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b) "m"
 #define BG(r, g, b) CSI "48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b) "m"
 
+#define FGP CSI "38;2;%d;%d;%dm"
+#define BGP CSI "48;2;%d;%d;%dm"
+
 class terml
 {
 public:
@@ -37,8 +40,8 @@ public:
 	terml& operator=(const terml&) = delete;
 	terml& operator=(terml&&) = delete;
 
-	char get(unsigned int x, unsigned int y, int* fg, int* bg) const;
-	void set(unsigned int x, unsigned int y, char c, int fg, int bg);
+	const tcell& get(unsigned int x, unsigned int y) const;
+	void set(unsigned int x, unsigned int y, tcell cell);
 	void flush() const;
 
 	void set_main_callback(terml_main_callback);
@@ -54,10 +57,12 @@ public:
 
 	void setup_buffer();
 
-	virtual void set_console_settings() = 0;
-	virtual void reset_console_settings() = 0;
+	void set_console_settings();
+	void reset_console_settings();
 
 protected:
+	virtual void set_console_settings_impl() = 0;
+	virtual void reset_console_settings_impl() = 0;
 	virtual void read_stdin(char* buffer, unsigned int buffer_size) = 0;
 	virtual unsigned long long timer() = 0;
 	virtual unsigned long long timer_frequency() = 0;
@@ -66,7 +71,7 @@ protected:
 	void key_event(char code) const;
 
 private:
-	char* buffer;
+	tcell* cells;
 	unsigned int width;
 	unsigned int height;
 	terml_main_callback main;
@@ -75,8 +80,6 @@ private:
 	terml_resize_callback resize;
 	bool should_quit;
 	bool really_should_quit;
-
-	static const unsigned int CELL_SIZE = sizeof(FG(255, 255, 255) BG(255, 255, 255) " ") - 1;
 };
 
 #endif//TERML_TERML_PRIVATE_H

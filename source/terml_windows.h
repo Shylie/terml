@@ -11,8 +11,8 @@
 class terml_windows : public terml
 {
 protected:
-	virtual void set_console_settings() override;
-	virtual void reset_console_settings() override;
+	virtual void set_console_settings_impl() override;
+	virtual void reset_console_settings_impl() override;
 	virtual void read_stdin(char* buffer, unsigned int buffer_size) override;
 	virtual unsigned long long timer() override;
 	virtual unsigned long long timer_frequency() override;
@@ -21,6 +21,7 @@ protected:
 private:
 	DWORD previous_input_mode;
 	DWORD previous_output_mode;
+	UINT previous_codepage;
 	HANDLE handle_stdin;
 };
 

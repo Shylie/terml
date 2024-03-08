@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 
-void terml_windows::set_console_settings()
+void terml_windows::set_console_settings_impl()
 {
 	handle_stdin = GetStdHandle(STD_INPUT_HANDLE);
 	GetConsoleMode(handle_stdin, &previous_input_mode);
@@ -13,7 +13,7 @@ void terml_windows::set_console_settings()
 	new_mode |= ENABLE_VIRTUAL_TERMINAL_INPUT;
 	if (!SetConsoleMode(handle_stdin, new_mode))
 	{
-		throw "Failed to set stdin mode";
+		throw "Failed to set stdin mode.";
 	}
 
 	HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -23,19 +23,27 @@ void terml_windows::set_console_settings()
 	new_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
 	if (!SetConsoleMode(handle, new_mode))
 	{
-		throw "Failed to set stdout mode";
+		throw "Failed to set stdout mode.";
 	}
+
+	previous_codepage = GetConsoleOutputCP();
+	SetConsoleOutputCP(CP_UTF8);
 }
 
-void terml_windows::reset_console_settings()
+void terml_windows::reset_console_settings_impl()
 {
 	if (!SetConsoleMode(handle_stdin, previous_input_mode))
 	{
-		throw "Failed to reset stdin mode";
+		throw "Failed to reset stdin mode.";
 	}
 	if (!SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), previous_output_mode))
 	{
-		throw "Failed to reset stdout mode";
+		throw "Failed to reset stdout mode.";
+	}
+
+	if (!SetConsoleOutputCP(previous_codepage))
+	{
+		throw "Failed to reset codepage.";
 	}
 }
 

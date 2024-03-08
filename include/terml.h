@@ -14,14 +14,21 @@ typedef void (*terml_resize_callback)(
 	unsigned int previous_height
 );
 
+struct tcell
+{
+	int codepoint;
+	int foreground;
+	int background;
+};
+
 int terml_init();
 int terml_deinit();
 
 unsigned int terml_get_width();
 unsigned int terml_get_height();
 
-char terml_get(unsigned int x, unsigned int y, int* foreground_color, int* background_color);
-void terml_set(unsigned int x, unsigned int y, char c, int foreground_color, int background_color);
+int  terml_get(unsigned int x, unsigned int y, const tcell** cell);
+int  terml_set(unsigned int x, unsigned int y, tcell  cell);
 void terml_flush();
 
 void terml_set_main_callback(terml_main_callback);

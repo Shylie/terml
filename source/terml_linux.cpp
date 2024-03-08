@@ -7,7 +7,7 @@
 #include <cstdio>
 #include <poll.h>
 
-void terml_linux::set_console_settings()
+void terml_linux::set_console_settings_impl()
 {
 	tcgetattr(STDIN_FILENO, &old_input_settings);
 	tcgetattr(STDOUT_FILENO, &old_output_settings);
@@ -18,7 +18,7 @@ void terml_linux::set_console_settings()
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
-void terml_linux::reset_console_settings()
+void terml_linux::reset_console_settings_impl()
 {
 	tcsetattr(STDIN_FILENO, TCSANOW, &old_input_settings);
 	tcsetattr(STDOUT_FILENO, TCSANOW, &old_output_settings);

@@ -9,108 +9,102 @@
 #include <cstdio>
 #include <cstring>
 
+namespace
+{
+	constexpr int BYTE_ONE_MASK   = 0b0000'0000'0000'0000'0011'1111;
+	constexpr int BYTE_TWO_MASK   = 0b0000'0000'0000'1111'1100'0000;
+	constexpr int BYTE_THREE_MASK = 0b0000'0011'1111'0000'0000'0000;
+	constexpr int BYTE_FOUR_MASK  = 0b0001'1100'0000'0000'0000'0000;
+
+	constexpr int BYTE_ONE_MASK_OFFSET   = 0;
+	constexpr int BYTE_TWO_MASK_OFFSET   = BYTE_ONE_MASK_OFFSET   + 2;
+	constexpr int BYTE_THREE_MASK_OFFSET = BYTE_TWO_MASK_OFFSET   + 2;
+	constexpr int BYTE_FOUR_MASK_OFFSET  = BYTE_THREE_MASK_OFFSET + 2;
+
+	constexpr int ONE_BYTE_FILL   =                            0b10000000;
+	constexpr int TWO_BYTE_FILL   =                   0b11000000'10000000;
+	constexpr int THREE_BYTE_FILL =          0b11100000'10000000'10000000;
+	constexpr int FOUR_BYTE_FILL  = 0b11110000'10000000'10000000'10000000;
+
+	void print_cell(tcell cell, const tcell* last)
+	{
+		if (!last || cell.foreground != last->foreground)
+		{
+			printf(FGP, (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+		}
+		if (!last || cell.background != last->background)
+		{
+			printf(BGP, (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+		}
+
+		// one-byte codepoints
+		if (cell.codepoint < 0x80)
+		{
+			const char str[] = { cell.codepoint, '\0' };
+			printf("%s", str);
+		}
+		// two-byte codepoints
+		else if (cell.codepoint < 0x800)
+		{
+			const int byte_one = (cell.codepoint & BYTE_ONE_MASK) << BYTE_ONE_MASK_OFFSET;
+			const int byte_two = (cell.codepoint & BYTE_TWO_MASK) << BYTE_TWO_MASK_OFFSET;
+			const int utf8 = TWO_BYTE_FILL | byte_one | byte_two;
+			
+			const char str[] = { (utf8 & 0xFF00) >> 8, utf8 & 0xFF, '\0' };
+			printf("%s", str);
+		}
+		// three-byte codepoints
+		else if (cell.codepoint < 0x10000)
+		{
+			const int byte_one   = (cell.codepoint & BYTE_ONE_MASK)   << BYTE_ONE_MASK_OFFSET;
+			const int byte_two   = (cell.codepoint & BYTE_TWO_MASK)   << BYTE_TWO_MASK_OFFSET;
+			const int byte_three = (cell.codepoint & BYTE_THREE_MASK) << BYTE_THREE_MASK_OFFSET;
+			const int utf8 = THREE_BYTE_FILL | byte_one | byte_two | byte_three;
+
+			const char str[] = { (utf8 & 0xFF0000) >> 16, (utf8 & 0xFF00) >> 8, utf8 & 0xFF, '\0' };
+			printf("%s", str);
+		}
+		// four-byte codepoints
+		else if (cell.codepoint < 0x110000)
+		{
+			const int byte_one   = (cell.codepoint & BYTE_ONE_MASK)   << BYTE_ONE_MASK_OFFSET;
+			const int byte_two   = (cell.codepoint & BYTE_TWO_MASK)   << BYTE_TWO_MASK_OFFSET;
+			const int byte_three = (cell.codepoint & BYTE_THREE_MASK) << BYTE_THREE_MASK_OFFSET;
+			const int byte_four  = (cell.codepoint & BYTE_FOUR_MASK)  << BYTE_FOUR_MASK_OFFSET;
+			const int utf8 = FOUR_BYTE_FILL | byte_one | byte_two | byte_three | byte_four;
+
+			const char str[] = { (utf8 & 0xFF000000) >> 24, (utf8 & 0xFF0000) >> 16, (utf8 & 0xFF00) >> 8, utf8 & 0xFF, '\0' };
+			printf("%s", str);
+		}
+	}
+}
+
 terml::terml() :
+	cells(nullptr),
+	width(0),
+	height(0),
 	main(nullptr),
 	quit(nullptr),
 	key(nullptr),
 	resize(nullptr),
-	buffer(nullptr),
-	width(0),
-	height(0)
+	should_quit(false),
+	really_should_quit(false)
 {
-	printf(ALT_BUF() HIDE_CURSOR());
-	fflush(stdout);
 }
 
 terml::~terml()
 {
-	printf(REG_BUF() SHOW_CURSOR());
-	fflush(stdout);
-
-	delete[] buffer;
+	if (cells) { delete[] cells; }
 }
 
-char terml::get(unsigned int x, unsigned int y, int* fg, int* bg) const
+const tcell& terml::get(unsigned int x, unsigned int y) const
 {
-	const unsigned int offset = x + y * width;
-
-	if (fg)
-	{
-		const unsigned char r =
-			(buffer[offset * CELL_SIZE + 9] - '0') +
-			(buffer[offset * CELL_SIZE + 8] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 7] - '0') * 100;
-
-		const unsigned char g =
-			(buffer[offset * CELL_SIZE + 13] - '0') +
-			(buffer[offset * CELL_SIZE + 12] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 11] - '0') * 100;
-
-		const unsigned char b =
-			(buffer[offset * CELL_SIZE + 17] - '0') +
-			(buffer[offset * CELL_SIZE + 16] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 15] - '0') * 100;
-
-		*fg = (r << 16) | (g << 8) | b;
-	}
-
-	if (bg)
-	{
-		const unsigned char r =
-			(buffer[offset * CELL_SIZE + 28] - '0') +
-			(buffer[offset * CELL_SIZE + 27] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 26] - '0') * 100;
-
-		const unsigned char g =
-			(buffer[offset * CELL_SIZE + 32] - '0') +
-			(buffer[offset * CELL_SIZE + 31] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 30] - '0') * 100;
-
-		const unsigned char b =
-			(buffer[offset * CELL_SIZE + 36] - '0') +
-			(buffer[offset * CELL_SIZE + 35] - '0') * 10 +
-			(buffer[offset * CELL_SIZE + 34] - '0') * 100;
-
-		*bg = (r << 16) | (g << 8) | b;
-	}
-
-	return buffer[offset * CELL_SIZE + CELL_SIZE - 1];
+	return cells[x + y * width];
 }
 
-void terml::set(unsigned int x, unsigned int y, char c, int fg, int bg)
+void terml::set(unsigned int x, unsigned int y, tcell cell)
 {
-	const unsigned int offset = x + y * width;
-
-	unsigned char fgr = (fg & 0xFF0000) >> 16;
-	unsigned char fgg = (fg & 0x00FF00) >> 8;
-	unsigned char fgb = (fg & 0x0000FF);
-
-	unsigned char bgr = (bg & 0xFF0000) >> 16;
-	unsigned char bgg = (bg & 0x00FF00) >> 8;
-	unsigned char bgb = (bg & 0x0000FF);
-
-	for (int i = 0; i < 3; i++)
-	{
-		buffer[offset * CELL_SIZE + (9 - i)] = (fgr % 10) + '0';
-		fgr /= 10;
-
-		buffer[offset * CELL_SIZE + (13 - i)] = (fgg % 10) + '0';
-		fgg /= 10;
-
-		buffer[offset * CELL_SIZE + (17 - i)] = (fgb % 10) + '0';
-		fgb /= 10;
-
-		buffer[offset * CELL_SIZE + (28 - i)] = (bgr % 10) + '0';
-		bgr /= 10;
-
-		buffer[offset * CELL_SIZE + (32 - i)] = (bgg % 10) + '0';
-		bgg /= 10;
-
-		buffer[offset * CELL_SIZE + (36 - i)] = (bgb % 10) + '0';
-		bgb /= 10;
-	}
-
-	buffer[offset * CELL_SIZE + CELL_SIZE - 1] = c;
+	cells[x + y * width] = cell;
 }
 
 void terml::flush() const
@@ -118,7 +112,11 @@ void terml::flush() const
 	printf(CUP(1, 1));
 	fflush(stdout);
 
-	printf("%s", buffer);
+	print_cell(cells[0], nullptr);
+	for (int i = 1; i < width * height; i++)
+	{
+		print_cell(cells[i], &cells[i - 1]);
+	}
 	fflush(stdout);
 }
 
@@ -155,7 +153,7 @@ void terml::mainloop()
 	should_quit = false;
 	really_should_quit = false;
 
-	const unsigned long long wait_time = timer_frequency() / 1000;
+	const unsigned long long wait_time = timer_frequency() / 60;
 	unsigned long long last_time = timer();
 
 	while (!really_should_quit)
@@ -230,23 +228,32 @@ void terml::setup_buffer()
 		width = new_width;
 		height = new_height;
 
-		if (buffer) { delete[] buffer; }
-		buffer = new char[CELL_SIZE * width * height + 1];
-
-		constexpr char BLANK_CELL[] = FG(255, 255, 255) CSI "48;2;000;000;000m" " ";
-
-		for (int i = 0; i < width * height; i++)
-		{
-			memcpy(buffer + i * CELL_SIZE, BLANK_CELL, CELL_SIZE);
-		}
-
-		buffer[CELL_SIZE * width * height] = '\0';
+		if (cells) { delete[] cells; }
+		cells = new tcell[width * height];
+		memset(cells, 0, sizeof(tcell) * width * height);
 
 		if (resize)
 		{
 			resize(old_width, old_height);
 		}
 	}
+}
+
+void terml::set_console_settings()
+{
+	setvbuf(stdout, nullptr, _IOFBF, BUFSIZ * BUFSIZ);
+	printf(ALT_BUF() HIDE_CURSOR());
+	fflush(stdout);
+	set_console_settings_impl();
+}
+
+void terml::reset_console_settings()
+{
+	setvbuf(stdout, nullptr, _IOLBF, BUFSIZ);
+	printf(REG_BUF() SHOW_CURSOR());
+	fflush(stdout);
+
+	reset_console_settings_impl();
 }
 
 static terml* TERML_G;
@@ -266,16 +273,20 @@ extern "C"
 				TERML_G = new terml_linux;
 #endif
 			}
+			else
+			{
+				throw "terml already initialized.";
+			}
 
 			TERML_G->set_console_settings();
 			TERML_G->setup_buffer();
 
-			return 1;
+			return 0;
 		}
 		catch (const char* c)
 		{
 			LAST_ERROR = c;
-			return 0;
+			return 1;
 		}
 	}
 
@@ -289,12 +300,12 @@ extern "C"
 				delete TERML_G;
 			}
 
-			return 1;
+			return 0;
 		}
 		catch (const char* c)
 		{
 			LAST_ERROR = c;
-			return 0;
+			return 1;
 		}
 	}
 
@@ -308,14 +319,37 @@ extern "C"
 		return TERML_G->get_height();
 	}
 
-	char terml_get(unsigned int x, unsigned int y, int* fg, int* bg)
+	int terml_get(unsigned int x, unsigned int y, const tcell** cell)
 	{
-		return TERML_G->get(x, y, fg, bg);
+		if (x >= TERML_G->get_width() || y >= TERML_G->get_height())
+		{
+			LAST_ERROR = "Coordinates out of bounds.";
+			return 1;
+		}
+		else if (!cell)
+		{
+			LAST_ERROR = "Null output pointer.";
+			return 1;
+		}
+		else
+		{
+			*cell = &TERML_G->get(x, y);
+			return 0;
+		}
 	}
 
-	void terml_set(unsigned int x, unsigned int y, char c, int fg, int bg)
+	int terml_set(unsigned int x, unsigned int y, tcell cell)
 	{
-		TERML_G->set(x, y, c, fg, bg);
+		if (x >= TERML_G->get_width() || y >= TERML_G->get_height())
+		{
+			LAST_ERROR = "Coordinates out of bounds.";
+			return 1;
+		}
+		else
+		{
+			TERML_G->set(x, y, cell);
+			return 0;
+		}
 	}
 
 	void terml_flush()
