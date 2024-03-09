@@ -243,6 +243,7 @@ void terml::set_console_settings()
 {
 	setvbuf(stdout, nullptr, _IOFBF, BUFSIZ * BUFSIZ);
 	printf(ALT_BUF() HIDE_CURSOR());
+	printf(SELECT_UTF8());
 	fflush(stdout);
 	set_console_settings_impl();
 }
