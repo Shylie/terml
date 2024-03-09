@@ -319,7 +319,7 @@ extern "C"
 		return TERML_G->get_height();
 	}
 
-	int terml_get(unsigned int x, unsigned int y, const tcell** cell)
+	int terml_get(unsigned int x, unsigned int y, tcell* cell)
 	{
 		if (x >= TERML_G->get_width() || y >= TERML_G->get_height())
 		{
@@ -333,7 +333,7 @@ extern "C"
 		}
 		else
 		{
-			*cell = &TERML_G->get(x, y);
+			*cell = TERML_G->get(x, y);
 			return 0;
 		}
 	}

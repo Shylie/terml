@@ -27,7 +27,7 @@ int terml_deinit();
 unsigned int terml_get_width();
 unsigned int terml_get_height();
 
-int  terml_get(unsigned int x, unsigned int y, const tcell** cell);
+int  terml_get(unsigned int x, unsigned int y, tcell* cell);
 int  terml_set(unsigned int x, unsigned int y, tcell  cell);
 void terml_flush();
 
