@@ -11,20 +11,20 @@
 
 namespace
 {
-	constexpr int BYTE_ONE_MASK   = 0b0000'0000'0000'0000'0011'1111;
-	constexpr int BYTE_TWO_MASK   = 0b0000'0000'0000'1111'1100'0000;
-	constexpr int BYTE_THREE_MASK = 0b0000'0011'1111'0000'0000'0000;
-	constexpr int BYTE_FOUR_MASK  = 0b0001'1100'0000'0000'0000'0000;
+	constexpr int BYTE_ONE_MASK   = 0b000000000000000000111111;
+	constexpr int BYTE_TWO_MASK   = 0b000000000000111111000000;
+	constexpr int BYTE_THREE_MASK = 0b000000111111000000000000;
+	constexpr int BYTE_FOUR_MASK  = 0b000111000000000000000000;
 
 	constexpr int BYTE_ONE_MASK_OFFSET   = 0;
 	constexpr int BYTE_TWO_MASK_OFFSET   = BYTE_ONE_MASK_OFFSET   + 2;
 	constexpr int BYTE_THREE_MASK_OFFSET = BYTE_TWO_MASK_OFFSET   + 2;
 	constexpr int BYTE_FOUR_MASK_OFFSET  = BYTE_THREE_MASK_OFFSET + 2;
 
-	constexpr int ONE_BYTE_FILL   =                            0b10000000;
-	constexpr int TWO_BYTE_FILL   =                   0b11000000'10000000;
-	constexpr int THREE_BYTE_FILL =          0b11100000'10000000'10000000;
-	constexpr int FOUR_BYTE_FILL  = 0b11110000'10000000'10000000'10000000;
+	constexpr int ONE_BYTE_FILL   =                         0b10000000;
+	constexpr int TWO_BYTE_FILL   =                 0b1100000010000000;
+	constexpr int THREE_BYTE_FILL =         0b111000001000000010000000;
+	constexpr int FOUR_BYTE_FILL  = 0b11110000100000001000000010000000;
 
 	void print_cell(tcell cell, const tcell* last)
 	{
