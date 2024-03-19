@@ -16,6 +16,9 @@ void terml_linux::set_console_settings_impl()
 	t.c_lflag &= ~(ICANON | ECHO);
 
 	tcsetattr(STDIN_FILENO, TCSANOW, &t);
+
+	printf(SELECT_UTF8());
+	fflush(stdout);
 }
 
 void terml_linux::reset_console_settings_impl()
