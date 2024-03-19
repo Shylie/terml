@@ -16,6 +16,7 @@
 
 #define HIDE_CURSOR() CSI "?25l"
 #define SHOW_CURSOR() CSI "?25h"
+#define SELECT_UTF8() CSI "%G"
 
 #define REPORT_CUSROR_POSITION() CSI "6n"
 #define CURSOR_POSITION_FORMAT() "%*1s[%u;%u"
