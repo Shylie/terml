@@ -26,7 +26,7 @@ namespace
 	constexpr int THREE_BYTE_FILL =         0b111000001000000010000000;
 	constexpr int FOUR_BYTE_FILL  = 0b11110000100000001000000010000000;
 
-	void print_cell(tcell cell)
+	void print_cell_impl(tcell cell)
 	{
 		// one-byte codepoints
 		if (cell.codepoint < 0x80)
@@ -69,18 +69,26 @@ namespace
 		}
 	}
 
+	void print_cell(tcell cell)
+	{
+		printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+		printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+
+		print_cell_impl(cell);
+	}
+
 	void print_cell(tcell cell, tcell last)
 	{
 		if (cell.foreground != last.foreground)
 		{
-			printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+			printf(FG(% d, % d, % d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
 		}
 		if (cell.background != last.background)
 		{
-			printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+			printf(BG(% d, % d, % d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
 		}
 
-		print_cell(cell);
+		print_cell_impl(cell);
 	}
 }
 
@@ -114,14 +122,14 @@ void terml::set(unsigned int x, unsigned int y, tcell cell)
 
 void terml::flush() const
 {
-	printf(CUP(1, 0));
+	printf(CUP(1, 1));
 	print_cell(cells[0]);
 	for (int i = 1; i < width * height; i++)
 	{
 		const unsigned int x = i % width;
 		const unsigned int y = i / width;
 
-		printf(CUP(%d, %d), y, x + 1);
+		printf(CUP(%d, %d), y + 1, x + 1);
 		print_cell(cells[i], cells[i - 1]);
 	}
 
