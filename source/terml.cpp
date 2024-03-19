@@ -81,11 +81,11 @@ namespace
 	{
 		if (cell.foreground != last.foreground)
 		{
-			printf(FG(% d, % d, % d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+			printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
 		}
 		if (cell.background != last.background)
 		{
-			printf(BG(% d, % d, % d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+			printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
 		}
 
 		print_cell_impl(cell);
