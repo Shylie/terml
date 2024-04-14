@@ -26,17 +26,8 @@ namespace
 	constexpr int THREE_BYTE_FILL =         0b111000001000000010000000;
 	constexpr int FOUR_BYTE_FILL  = 0b11110000100000001000000010000000;
 
-	void print_cell(tcell cell, const tcell* last)
+	void print_cell_impl(tcell cell)
 	{
-		if (!last || cell.foreground != last->foreground)
-		{
-			printf(FGP, (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
-		}
-		if (!last || cell.background != last->background)
-		{
-			printf(BGP, (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
-		}
-
 		// one-byte codepoints
 		if (cell.codepoint < 0x80)
 		{
@@ -77,6 +68,28 @@ namespace
 			printf("%s", str);
 		}
 	}
+
+	void print_cell(tcell cell)
+	{
+		printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+		printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+
+		print_cell_impl(cell);
+	}
+
+	void print_cell(tcell cell, tcell last)
+	{
+		if (cell.foreground != last.foreground)
+		{
+			printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
+		}
+		if (cell.background != last.background)
+		{
+			printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
+		}
+
+		print_cell_impl(cell);
+	}
 }
 
 terml::terml() :
@@ -110,13 +123,16 @@ void terml::set(unsigned int x, unsigned int y, tcell cell)
 void terml::flush() const
 {
 	printf(CUP(1, 1));
-	fflush(stdout);
-
-	print_cell(cells[0], nullptr);
+	print_cell(cells[0]);
 	for (int i = 1; i < width * height; i++)
 	{
-		print_cell(cells[i], &cells[i - 1]);
+		const unsigned int x = i % width;
+		const unsigned int y = i / width;
+
+		printf(CUP(%d, %d), y + 1, x + 1);
+		print_cell(cells[i], cells[i - 1]);
 	}
+
 	fflush(stdout);
 }
 
@@ -244,6 +260,7 @@ void terml::set_console_settings()
 	setvbuf(stdout, nullptr, _IOFBF, BUFSIZ * BUFSIZ);
 	printf(ALT_BUF() HIDE_CURSOR());
 	fflush(stdout);
+
 	set_console_settings_impl();
 }
 
