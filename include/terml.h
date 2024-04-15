@@ -8,7 +8,7 @@ extern "C"
 
 typedef void (*terml_main_callback)  ();
 typedef int  (*terml_quit_callback)  ();
-typedef void (*terml_key_callback)   (char code);
+typedef void (*terml_key_callback)   (unsigned int code);
 typedef void (*terml_resize_callback)(
 	unsigned int previous_width,
 	unsigned int previous_height
@@ -16,7 +16,7 @@ typedef void (*terml_resize_callback)(
 
 struct tcell
 {
-	int codepoint;
+	unsigned int codepoint;
 	int foreground;
 	int background;
 };
