@@ -87,12 +87,15 @@ void terml_windows::process_events()
 				KEY_EVENT_RECORD* record = &input_record_buffer[i].Event.KeyEvent;
 				if (record->bKeyDown)
 				{
-					const char key = record->uChar.AsciiChar == '\r' ? '\n' : record->uChar.AsciiChar;
-					if (key)
+					if (record->uChar.AsciiChar)
 					{
 						for (int repeat = 0; repeat < record->wRepeatCount; repeat++)
 						{
-							key_event(key);
+							key_event(record->uChar.AsciiChar);
+							if (record->uChar.AsciiChar == '\r')
+							{
+								key_event('\n');
+							}
 						}
 					}
 				}
