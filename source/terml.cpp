@@ -69,26 +69,34 @@ namespace
 		}
 	}
 
-	void print_cell(tcell cell)
+	void print_cell(tcell cell, const tcell* last = nullptr)
 	{
-		printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
-		printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
-
-		print_cell_impl(cell);
-	}
-
-	void print_cell(tcell cell, tcell last)
-	{
-		if (cell.foreground != last.foreground)
+		if (!last || cell.foreground != last->foreground)
 		{
 			printf(FG(%d, %d, %d), (cell.foreground & 0xFF0000) >> 16, (cell.foreground & 0xFF00) >> 8, cell.foreground & 0xFF);
 		}
-		if (cell.background != last.background)
+		if (!last || cell.background != last->background)
 		{
 			printf(BG(%d, %d, %d), (cell.background & 0xFF0000) >> 16, (cell.background & 0xFF00) >> 8, cell.background & 0xFF);
 		}
 
 		print_cell_impl(cell);
+	}
+
+	bool operator==(const tcell& a, const tcell& b)
+	{
+		return
+			a.background == b.background &&
+			a.foreground == b.foreground &&
+			a.codepoint  == b.codepoint;
+	}
+
+	bool operator!=(const tcell& a, const tcell& b)
+	{
+		return
+			a.background != b.background ||
+			a.foreground != b.foreground ||
+			a.codepoint  != b.codepoint;
 	}
 }
 
@@ -112,25 +120,39 @@ terml::~terml()
 
 const tcell& terml::get(unsigned int x, unsigned int y) const
 {
-	return cells[x + y * width];
+	return cells[x + y * width].cell;
 }
 
 void terml::set(unsigned int x, unsigned int y, tcell cell)
 {
-	cells[x + y * width] = cell;
+	cells[x + y * width].dirty = (cell != cells[x + y * width].cell);
+	cells[x + y * width].cell = cell;
 }
 
 void terml::flush() const
 {
-	printf(CUP(1, 1));
-	print_cell(cells[0]);
+	const tcell* last = nullptr;
+	if (cells[0].dirty)
+	{
+		printf(CUP(1, 1));
+		print_cell(cells[0].cell);
+		cells[0].dirty = false;
+
+		last = &cells[0].cell;
+	}
 	for (int i = 1; i < width * height; i++)
 	{
 		const unsigned int x = i % width;
 		const unsigned int y = i / width;
 
-		printf(CUP(%d, %d), y + 1, x + 1);
-		print_cell(cells[i], cells[i - 1]);
+		if (cells[i].dirty)
+		{
+			printf(CUP(%d, %d), y + 1, x + 1);
+			print_cell(cells[i].cell, last);
+			cells[i].dirty = false;
+			
+			last = &cells[i].cell;
+		}
 	}
 
 	fflush(stdout);
@@ -245,8 +267,8 @@ void terml::setup_buffer()
 		height = new_height;
 
 		if (cells) { delete[] cells; }
-		cells = new tcell[width * height];
-		memset(cells, 0, sizeof(tcell) * width * height);
+		cells = new tcelld[width * height];
+		memset(cells, 0, sizeof(tcelld) * width * height);
 
 		if (resize)
 		{

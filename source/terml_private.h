@@ -26,6 +26,12 @@
 #define FG(r, g, b) CSI "38;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b) "m"
 #define BG(r, g, b) CSI "48;2;" STRINGIFY(r) ";" STRINGIFY(g) ";" STRINGIFY(b) "m"
 
+struct tcelld
+{
+	tcell cell;
+	bool dirty;
+};
+
 class terml
 {
 public:
@@ -69,7 +75,7 @@ protected:
 	void key_event(char code) const;
 
 private:
-	tcell* cells;
+	tcelld* cells;
 	unsigned int width;
 	unsigned int height;
 	terml_main_callback main;
