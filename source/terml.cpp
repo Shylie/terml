@@ -118,7 +118,7 @@ terml::~terml()
 	if (cells) { delete[] cells; }
 }
 
-const tcell& terml::get(unsigned int x, unsigned int y) const
+tcell terml::get(unsigned int x, unsigned int y) const
 {
 	return cells[x + y * width].cell;
 }
@@ -295,8 +295,11 @@ void terml::reset_console_settings()
 	reset_console_settings_impl();
 }
 
-static terml* TERML_G;
-static const char* LAST_ERROR = nullptr;
+namespace
+{
+	terml* TERML_G;
+	const char* LAST_ERROR = nullptr;
+}
 
 extern "C"
 {
@@ -358,36 +361,28 @@ extern "C"
 		return TERML_G->get_height();
 	}
 
-	int terml_get(unsigned int x, unsigned int y, tcell* cell)
+	tcell terml_get(unsigned int x, unsigned int y)
 	{
 		if (x >= TERML_G->get_width() || y >= TERML_G->get_height())
 		{
 			LAST_ERROR = "Coordinates out of bounds.";
-			return 1;
-		}
-		else if (!cell)
-		{
-			LAST_ERROR = "Null output pointer.";
-			return 1;
+			return { 0, 0, 0 };
 		}
 		else
 		{
-			*cell = TERML_G->get(x, y);
-			return 0;
+			return TERML_G->get(x, y);
 		}
 	}
 
-	int terml_set(unsigned int x, unsigned int y, tcell cell)
+	void terml_set(unsigned int x, unsigned int y, tcell cell)
 	{
 		if (x >= TERML_G->get_width() || y >= TERML_G->get_height())
 		{
 			LAST_ERROR = "Coordinates out of bounds.";
-			return 1;
 		}
 		else
 		{
 			TERML_G->set(x, y, cell);
-			return 0;
 		}
 	}
 

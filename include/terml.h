@@ -14,12 +14,12 @@ typedef void (*terml_resize_callback)(
 	unsigned int previous_height
 );
 
-struct tcell
+typedef struct
 {
 	unsigned int codepoint;
 	int foreground;
 	int background;
-};
+} tcell;
 
 int terml_init();
 int terml_deinit();
@@ -27,9 +27,9 @@ int terml_deinit();
 unsigned int terml_get_width();
 unsigned int terml_get_height();
 
-int  terml_get(unsigned int x, unsigned int y, tcell* cell);
-int  terml_set(unsigned int x, unsigned int y, tcell  cell);
-void terml_flush();
+tcell terml_get(unsigned int x, unsigned int y);
+void  terml_set(unsigned int x, unsigned int y, tcell cell);
+void  terml_flush();
 
 void terml_set_main_callback(terml_main_callback);
 void terml_set_quit_callback(terml_quit_callback);

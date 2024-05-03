@@ -44,9 +44,9 @@ public:
 	terml& operator=(const terml&) = delete;
 	terml& operator=(terml&&) = delete;
 
-	const tcell& get(unsigned int x, unsigned int y) const;
-	void set(unsigned int x, unsigned int y, tcell cell);
-	void flush() const;
+	tcell get(unsigned int x, unsigned int y) const;
+	void  set(unsigned int x, unsigned int y, tcell cell);
+	void  flush() const;
 
 	void set_main_callback(terml_main_callback);
 	void set_quit_callback(terml_quit_callback);
